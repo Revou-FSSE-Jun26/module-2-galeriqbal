@@ -1,1 +1,25 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/wGq_UtnU)
+# revoshop
+
+# requirement
+- postgreSQL
+- dbeaver / pgadmin
+- github
+
+## How To Run It On Your Local Machine
+- clone this repository from this [**LINK**](https://github.com/Revou-FSSE-Jun26/module-2-galeriqbal/tree/main)
+- make new or use existing connection to create new database using dbeaver / pgadmin or you can use psql CLI 
+- run sql file in the following order
+```
+1. schema.sql
+2. seed.sql
+3. queries
+```
+
+or use psql command
+```bash
+\i db/schema.sql
+\i db/seed.sql
+\i db/queries.sql
+```
+
+Thank you.

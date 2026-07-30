@@ -1,0 +1,1 @@
+select * from products where price > 10000 order by price asc limit 3;

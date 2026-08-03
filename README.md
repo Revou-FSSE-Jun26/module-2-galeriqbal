@@ -21,5 +21,9 @@ or use psql command
 \i db/seed.sql
 \i db/queries.sql
 ```
+## Diagram Schema
+## Database Schema
+
+![Database Schema](assets/schema%20diagram.png)
 
 Thank you.

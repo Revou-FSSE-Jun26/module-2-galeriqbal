@@ -11,7 +11,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123789@localhost/
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # TODO 3: Initialize SQLAlchemy with the app
-db = app
+db = SQLAlchemy(app)
 
 @app.route('/')
 def index():

@@ -1,5 +1,5 @@
-from flask import Flask, jsonify
-from models import db
+from flask import Flask, jsonify, request
+from models import db, User
 
 app = Flask(__name__)
 
@@ -50,6 +50,31 @@ def get_product(product_id):
     if product is None:
         return jsonify({"error": "Product not found"}), 404
     return jsonify(product)
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+
+    if not data or not data.get('name') or not data.get('email') or not data.get('password'):
+        return jsonify({"error": "name, email, and password are required"}), 400
+
+    new_user = User(
+        name=data['name'],
+        email=data['email'],
+        password_hash=data['password']
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({
+        "message": "User registered successfully",
+        "user": {
+            "id": new_user.id,
+            "name": new_user.name,
+            "email": new_user.email
+        }
+    }), 201
 
 if __name__ == '__main__':
     app.run(debug=True)

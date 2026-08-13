@@ -1,3 +1,4 @@
 .revou/
 .rahasia/
 .env
+__pycache__/

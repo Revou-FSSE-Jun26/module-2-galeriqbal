@@ -50,6 +50,32 @@ class Category(db.Model):
     products = db.relationship("Product", back_populates="category")
 
 
+order_items = db.Table(
+    "order_items",
+    db.Column(
+        "order_id",
+        db.Integer,
+        db.ForeignKey("orders.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+    db.Column(
+        "product_id",
+        db.Integer,
+        db.ForeignKey("products.id"),
+        primary_key=True
+    ),
+    db.Column(
+        "quantity",
+        db.Integer,
+        nullable=False
+    ),
+    db.Column(
+        "product_price",
+        db.Numeric(12, 2)
+    )
+)
+
+
 class Product(db.Model):
     __tablename__ = "products"
 
@@ -118,28 +144,3 @@ class Order(db.Model):
         secondary=order_items,
         back_populates="orders"
     )
-
-order_items = db.Table(
-    "order_items",
-    db.Column(
-        "order_id",
-        db.Integer,
-        db.ForeignKey("orders.id", ondelete="CASCADE"),
-        primary_key=True
-    ),
-    db.Column(
-        "product_id",
-        db.Integer,
-        db.ForeignKey("products.id"),
-        primary_key=True
-    ),
-    db.Column(
-        "quantity",
-        db.Integer,
-        nullable=False
-    ),
-    db.Column(
-        "product_price",
-        db.Numeric(12, 2)
-    )
-)

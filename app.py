@@ -76,5 +76,17 @@ def register():
         }
     }), 201
 
+@app.route('/users/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    user = User.query.get(user_id)
+    if user is None:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "created_at": user.created_at.isoformat() if user.created_at else None
+    })
+
 if __name__ == '__main__':
     app.run(debug=True)

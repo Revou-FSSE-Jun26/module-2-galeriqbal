@@ -25,6 +25,11 @@ class User(db.Model):
         nullable=False
     )
 
+    role = db.Column(
+        db.String(50),
+        default='user'
+    )
+
     created_at = db.Column(
         db.DateTime(timezone=True),
         server_default=func.now()

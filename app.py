@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from flask_migrate import Migrate
 from models import db, User
 
 app = Flask(__name__)
@@ -12,6 +13,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # TODO 3: Initialize SQLAlchemy with the app
 db.init_app(app)
+migrate = Migrate(app, db)
 
 products = [
     {"id": 1, "categories_id": 1, "name": "Blade of Despair", "price": 10000, "stock": 25, "description": "Physical Attack tinggi dengan bonus damage saat musuh HP rendah."},

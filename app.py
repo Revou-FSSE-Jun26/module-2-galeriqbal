@@ -1,14 +1,14 @@
 from flask import Flask, jsonify, request
 from flask_migrate import Migrate
+from dotenv import load_dotenv
+import os
 from models import db, User, Order, Product, order_items
+
+load_dotenv()
 
 app = Flask(__name__)
 
-# TODO 1: Set SQLALCHEMY_DATABASE_URI to connect to your local PostgreSQL 'store_db'
-# Format: postgresql://username:password@host/database_name
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123789@localhost/revoshop_db'
-
-# TODO 2: Set SQLALCHEMY_TRACK_MODIFICATIONS to False
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # TODO 3: Initialize SQLAlchemy with the app

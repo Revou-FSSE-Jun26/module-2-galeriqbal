@@ -1,37 +1,99 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
+from models import db, Product, order_items
 
 product_bp = Blueprint('products', __name__)
 
-products = [
-    {"id": 1, "categories_id": 1, "name": "Blade of Despair", "price": 10000, "stock": 25, "description": "Physical Attack tinggi dengan bonus damage saat musuh HP rendah."},
-    {"id": 2, "categories_id": 1, "name": "Malefic Roar", "price": 8000, "stock": 30, "description": "Physical Penetration tinggi untuk menembus armor lawan."},
-    {"id": 3, "categories_id": 1, "name": "Berserker's Fury", "price": 7500, "stock": 20, "description": "Critical Damage dan Critical Chance tinggi."},
-    {"id": 4, "categories_id": 1, "name": "Hunter Strike", "price": 6000, "stock": 18, "description": "Memberikan Physical Penetration dan Movement Speed."},
-    {"id": 5, "categories_id": 1, "name": "Sea Halberd", "price": 9250, "stock": 15, "description": "Mengurangi efek regen dan lifesteal musuh."},
-    {"id": 6, "categories_id": 2, "name": "Holy Crystal", "price": 25000, "stock": 22, "description": "Meningkatkan Magic Power secara signifikan."},
-    {"id": 7, "categories_id": 2, "name": "Lightning Truncheon", "price": 12500, "stock": 19, "description": "Memberikan damage petir tambahan setiap beberapa detik."},
-    {"id": 8, "categories_id": 2, "name": "Genius Wand", "price": 7500, "stock": 17, "description": "Mengurangi Magic Defense target."},
-    {"id": 9, "categories_id": 2, "name": "Blood Wings", "price": 3000, "stock": 12, "description": "Magic Power sangat tinggi dengan tambahan HP."},
-    {"id": 10, "categories_id": 2, "name": "Divine Glaive", "price": 8000, "stock": 14, "description": "Magic Penetration tinggi terhadap target dengan Magic Defense besar."},
-    {"id": 11, "categories_id": 3, "name": "Athena Shield", "price": 8800, "stock": 20, "description": "Memberikan Magic Damage Reduction setelah menerima serangan."},
-    {"id": 12, "categories_id": 3, "name": "Blade Armor", "price": 5900, "stock": 16, "description": "Memantulkan sebagian Basic Attack lawan."},
-    {"id": 13, "categories_id": 3, "name": "Antique Cuirass", "price": 12350, "stock": 13, "description": "Mengurangi Physical Attack musuh yang menyerang."},
-    {"id": 14, "categories_id": 3, "name": "Dominance Ice", "price": 6000, "stock": 21, "description": "Mengurangi Attack Speed dan Shield/Regen lawan."},
-    {"id": 15, "categories_id": 4, "name": "Radiant Armor", "price": 9400, "stock": 18, "description": "Efektif melawan Magic Damage bertipe DPS."},
-    {"id": 16, "categories_id": 4, "name": "Oracle", "price": 7250, "stock": 15, "description": "Meningkatkan efek Shield dan HP Regen."},
-    {"id": 17, "categories_id": 4, "name": "Cursed Helmet", "price": 4750, "stock": 11, "description": "Memberikan Magic Damage area kepada musuh di sekitar."},
-    {"id": 18, "categories_id": 5, "name": "Warrior Boots", "price": 2400, "stock": 40, "description": "Sepatu dengan tambahan Physical Defense."},
-    {"id": 19, "categories_id": 5, "name": "Tough Boots", "price": 3000, "stock": 38, "description": "Sepatu dengan tambahan Magic Defense dan CC Reduction."},
-    {"id": 20, "categories_id": 5, "name": "Arcane Boots", "price": 2690, "stock": 35, "description": "Sepatu dengan tambahan Magic Penetration."},
-]
-
 @product_bp.route('/products', methods=['GET'])
 def get_products():
-    return jsonify(products)
+    products = Product.query.all()
+    return jsonify([product.to_dict() for product in products])
 
 @product_bp.route('/products/<int:product_id>', methods=['GET'])
 def get_product(product_id):
-    product = next((p for p in products if p["id"] == product_id), None)
+    product = Product.query.get(product_id)
     if product is None:
         return jsonify({"error": "Product not found"}), 404
-    return jsonify(product)
+    return jsonify(product.to_dict())
+
+@product_bp.route('/products', methods=['POST'])
+def create_product():
+    data = request.get_json()
+
+    # Validation
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+    if not data.get('name'):
+        return jsonify({"error": "name is required"}), 400
+    if data.get('price') is None:
+        return jsonify({"error": "price is required"}), 400
+    if data.get('stock') is None:
+        return jsonify({"error": "stock is required"}), 400
+    if data['price'] < 0:
+        return jsonify({"error": "price must be a positive number"}), 400
+    if data['stock'] < 0:
+        return jsonify({"error": "stock must be a positive number"}), 400
+
+    new_product = Product(
+        categories_id=data.get('categories_id'),
+        name=data['name'],
+        price=data['price'],
+        description=data.get('description'),
+        stock=data['stock']
+    )
+
+    db.session.add(new_product)
+    db.session.commit()
+
+    return jsonify(new_product.to_dict()), 201
+
+@product_bp.route('/products/<int:product_id>', methods=['PUT'])
+def update_product(product_id):
+    product = Product.query.get(product_id)
+    if product is None:
+        return jsonify({"error": "Product not found"}), 404
+
+    data = request.get_json()
+
+    # Validation
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+    if 'name' in data and not data['name']:
+        return jsonify({"error": "name cannot be empty"}), 400
+    if 'price' in data and data['price'] < 0:
+        return jsonify({"error": "price must be a positive number"}), 400
+    if 'stock' in data and data['stock'] < 0:
+        return jsonify({"error": "stock must be a positive number"}), 400
+
+    if 'name' in data:
+        product.name = data['name']
+    if 'price' in data:
+        product.price = data['price']
+    if 'description' in data:
+        product.description = data['description']
+    if 'stock' in data:
+        product.stock = data['stock']
+    if 'categories_id' in data:
+        product.categories_id = data['categories_id']
+
+    db.session.commit()
+
+    return jsonify(product.to_dict())
+
+@product_bp.route('/products/<int:product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    product = Product.query.get(product_id)
+    if product is None:
+        return jsonify({"error": "Product not found"}), 404
+
+    # Check if product has active orders
+    active_orders = db.session.execute(
+        order_items.select().where(order_items.c.product_id == product_id)
+    ).fetchall()
+
+    if active_orders:
+        return jsonify({"error": "Cannot delete product with active orders"}), 400
+
+    db.session.delete(product)
+    db.session.commit()
+
+    return jsonify({"message": "Product deleted successfully"})

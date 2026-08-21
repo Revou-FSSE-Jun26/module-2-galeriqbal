@@ -1,29 +1,12 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from models import db, Order, order_items
 
 order_bp = Blueprint('orders', __name__)
 
-@order_bp.route('/seed-order', methods=['POST'])
-def seed_order():
-    # Insert sample data: 1 order linked to multiple products (many-to-many)
-    order = Order(user_id=1, total_prices=25500)
-    db.session.add(order)
-    db.session.flush()  # get order.id before inserting into order_items
-
-    # Link this order to 3 products via order_items
-    db.session.execute(order_items.insert().values([
-        {"order_id": order.id, "product_id": 1, "quantity": 1, "product_price": 10000},
-        {"order_id": order.id, "product_id": 6, "quantity": 1, "product_price": 25000},
-        {"order_id": order.id, "product_id": 18, "quantity": 1, "product_price": 2400},
-    ]))
-
-    db.session.commit()
-
-    return jsonify({
-        "message": "Order created with multiple products (many-to-many)",
-        "order_id": order.id,
-        "products_linked": [1, 6, 18]
-    }), 201
+@order_bp.route('/orders', methods=['GET'])
+def get_orders():
+    orders = Order.query.all()
+    return jsonify([order.to_dict() for order in orders])
 
 @order_bp.route('/orders/<int:order_id>', methods=['GET'])
 def get_order(order_id):
@@ -31,20 +14,85 @@ def get_order(order_id):
     if order is None:
         return jsonify({"error": "Order not found"}), 404
 
-    # Query order_items to show the many-to-many data
+    # Include order items in response
     items = db.session.execute(
         order_items.select().where(order_items.c.order_id == order_id)
     ).fetchall()
 
+    result = order.to_dict()
+    result["products"] = [
+        {
+            "product_id": item.product_id,
+            "quantity": item.quantity,
+            "product_price": float(item.product_price) if item.product_price else None
+        } for item in items
+    ]
+
+    return jsonify(result)
+
+@order_bp.route('/orders', methods=['POST'])
+def create_order():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+    if not data.get('user_id'):
+        return jsonify({"error": "user_id is required"}), 400
+    if not data.get('products'):
+        return jsonify({"error": "products list is required"}), 400
+
+    # Create order
+    order = Order(
+        user_id=data['user_id'],
+        total_prices=data.get('total_prices', 0)
+    )
+    db.session.add(order)
+    db.session.flush()
+
+    # Link products via order_items
+    for item in data['products']:
+        db.session.execute(order_items.insert().values(
+            order_id=order.id,
+            product_id=item['product_id'],
+            quantity=item['quantity'],
+            product_price=item.get('product_price', 0)
+        ))
+
+    db.session.commit()
+
     return jsonify({
-        "order_id": order.id,
-        "user_id": order.user_id,
-        "total_prices": float(order.total_prices) if order.total_prices else None,
-        "products": [
-            {
-                "product_id": item.product_id,
-                "quantity": item.quantity,
-                "product_price": float(item.product_price) if item.product_price else None
-            } for item in items
-        ]
-    })
+        "message": "Order created successfully",
+        "order": order.to_dict(),
+        "products_linked": [item['product_id'] for item in data['products']]
+    }), 201
+
+@order_bp.route('/orders/<int:order_id>', methods=['PUT'])
+def update_order(order_id):
+    order = Order.query.get(order_id)
+    if order is None:
+        return jsonify({"error": "Order not found"}), 404
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+
+    if 'user_id' in data:
+        order.user_id = data['user_id']
+    if 'total_prices' in data:
+        order.total_prices = data['total_prices']
+
+    db.session.commit()
+
+    return jsonify(order.to_dict())
+
+@order_bp.route('/orders/<int:order_id>', methods=['DELETE'])
+def delete_order(order_id):
+    order = Order.query.get(order_id)
+    if order is None:
+        return jsonify({"error": "Order not found"}), 404
+
+    db.session.delete(order)
+    db.session.commit()
+
+    return jsonify({"message": "Order deleted successfully"})

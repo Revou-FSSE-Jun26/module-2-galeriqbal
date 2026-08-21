@@ -37,6 +37,15 @@ class User(db.Model):
 
     orders = db.relationship("Order", back_populates="user")
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "role": self.role,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
 class Category(db.Model):
     __tablename__ = "categories"
 
@@ -53,6 +62,13 @@ class Category(db.Model):
     )
 
     products = db.relationship("Product", back_populates="category")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
 
 
 order_items = db.Table(
@@ -122,6 +138,17 @@ class Product(db.Model):
         back_populates="products"
     )
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "categories_id": self.categories_id,
+            "name": self.name,
+            "price": float(self.price) if self.price else None,
+            "description": self.description,
+            "stock": self.stock,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
 
 class Order(db.Model):
     __tablename__ = "orders"
@@ -149,3 +176,11 @@ class Order(db.Model):
         secondary=order_items,
         back_populates="orders"
     )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "total_prices": float(self.total_prices) if self.total_prices else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }

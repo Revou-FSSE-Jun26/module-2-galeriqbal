@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from models import db, Product, order_items
+from utils.decorators import token_required
 
 product_bp = Blueprint('products', __name__)
 
@@ -16,7 +17,8 @@ def get_product(product_id):
     return jsonify(product.to_dict())
 
 @product_bp.route('/products', methods=['POST'])
-def create_product():
+@token_required
+def create_product(current_user):
     data = request.get_json()
 
     # Validation
@@ -47,7 +49,8 @@ def create_product():
     return jsonify(new_product.to_dict()), 201
 
 @product_bp.route('/products/<int:product_id>', methods=['PUT'])
-def update_product(product_id):
+@token_required
+def update_product(current_user, product_id):
     product = Product.query.get(product_id)
     if product is None:
         return jsonify({"error": "Product not found"}), 404
@@ -80,7 +83,8 @@ def update_product(product_id):
     return jsonify(product.to_dict())
 
 @product_bp.route('/products/<int:product_id>', methods=['DELETE'])
-def delete_product(product_id):
+@token_required
+def delete_product(current_user, product_id):
     product = Product.query.get(product_id)
     if product is None:
         return jsonify({"error": "Product not found"}), 404

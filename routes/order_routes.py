@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from models import db, Order, order_items
+from utils.decorators import token_required
 
 order_bp = Blueprint('orders', __name__)
 
@@ -31,7 +32,8 @@ def get_order(order_id):
     return jsonify(result)
 
 @order_bp.route('/orders', methods=['POST'])
-def create_order():
+@token_required
+def create_order(current_user):
     data = request.get_json()
 
     if not data:
@@ -67,7 +69,8 @@ def create_order():
     }), 201
 
 @order_bp.route('/orders/<int:order_id>', methods=['PUT'])
-def update_order(order_id):
+@token_required
+def update_order(current_user, order_id):
     order = Order.query.get(order_id)
     if order is None:
         return jsonify({"error": "Order not found"}), 404
@@ -87,7 +90,8 @@ def update_order(order_id):
     return jsonify(order.to_dict())
 
 @order_bp.route('/orders/<int:order_id>', methods=['DELETE'])
-def delete_order(order_id):
+@token_required
+def delete_order(current_user, order_id):
     order = Order.query.get(order_id)
     if order is None:
         return jsonify({"error": "Order not found"}), 404

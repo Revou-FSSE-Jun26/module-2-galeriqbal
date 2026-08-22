@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from models import db, Category
+from utils.decorators import token_required
 
 category_bp = Blueprint('categories', __name__)
 
@@ -16,7 +17,8 @@ def get_category(category_id):
     return jsonify(category.to_dict())
 
 @category_bp.route('/categories', methods=['POST'])
-def create_category():
+@token_required
+def create_category(current_user):
     data = request.get_json()
 
     if not data or not data.get('name'):
@@ -30,7 +32,8 @@ def create_category():
     return jsonify(new_category.to_dict()), 201
 
 @category_bp.route('/categories/<int:category_id>', methods=['PUT'])
-def update_category(category_id):
+@token_required
+def update_category(current_user, category_id):
     category = Category.query.get(category_id)
     if category is None:
         return jsonify({"error": "Category not found"}), 404
@@ -46,7 +49,8 @@ def update_category(category_id):
     return jsonify(category.to_dict())
 
 @category_bp.route('/categories/<int:category_id>', methods=['DELETE'])
-def delete_category(category_id):
+@token_required
+def delete_category(current_user, category_id):
     category = Category.query.get(category_id)
     if category is None:
         return jsonify({"error": "Category not found"}), 404

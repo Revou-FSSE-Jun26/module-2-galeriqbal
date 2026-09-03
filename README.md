@@ -429,6 +429,8 @@ locust -f locustfile.py --host http://localhost:5000
 
 Then open `http://localhost:8089` and start with 50 users, gradually increasing to 200 users.
 
+![Locust 200 users](revoshop_db/assets/locust_200users.png)
+
 ## Tech Stack
 
 - Flask

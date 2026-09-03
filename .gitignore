@@ -2,3 +2,5 @@
 .rahasia/
 .env
 __pycache__/
+.venv
+checkpoint 3.txt

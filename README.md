@@ -2,6 +2,8 @@
 
 Flask REST API with PostgreSQL for managing products, users, and orders.
 
+**Live Demo:** [RevoShop API on Vercel](https://module-2-galeriqbal-git-main-module-2-galeriqbal.vercel.app/)
+
 ## Overview
 
 RevoShop is a backend REST API for a simple e-commerce store. It manages users, product categories, products, and orders, including a many-to-many relationship between orders and products. The API supports full CRUD operations, JWT-based authentication, data validation, and error handling.

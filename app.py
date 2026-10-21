@@ -27,8 +27,12 @@ def create_app(config_overrides=None):
     db.init_app(app)
     Migrate(app, db)
 
-    # Izinkan request dari frontend Next.js (beda origin / port)
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000"]}})
+    # Izinkan request dari frontend: localhost (dev) + semua domain *.vercel.app (production)
+    CORS(app, resources={r"/*": {"origins": [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        r"https://.*\.vercel\.app",
+    ]}})
 
     # Register Blueprints
     app.register_blueprint(user_bp)

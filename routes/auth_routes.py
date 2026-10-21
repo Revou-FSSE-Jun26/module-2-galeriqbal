@@ -24,6 +24,7 @@ def login():
         {
             "user_id": user.id,
             "email": user.email,
+            "role": user.role,
             "exp": datetime.now(timezone.utc) + timedelta(hours=1)
         },
         os.getenv('JWT_SECRET_KEY'),

@@ -1,12 +1,22 @@
 from flask import Blueprint, jsonify, request
 from models import db, Product, order_items
-from utils.decorators import token_required
+from utils.decorators import token_required, admin_required
 
 product_bp = Blueprint('products', __name__)
 
 @product_bp.route('/products', methods=['GET'])
 def get_products():
-    products = Product.query.all()
+    query = Product.query
+
+    search = request.args.get('search')
+    if search:
+        query = query.filter(Product.name.ilike(f"%{search}%"))
+
+    category_id = request.args.get('category_id')
+    if category_id:
+        query = query.filter(Product.categories_id == category_id)
+
+    products = query.all()
     return jsonify([product.to_dict() for product in products])
 
 @product_bp.route('/products/<int:product_id>', methods=['GET'])
@@ -17,7 +27,7 @@ def get_product(product_id):
     return jsonify(product.to_dict())
 
 @product_bp.route('/products', methods=['POST'])
-@token_required
+@admin_required
 def create_product(current_user):
     data = request.get_json()
 
@@ -49,7 +59,7 @@ def create_product(current_user):
     return jsonify(new_product.to_dict()), 201
 
 @product_bp.route('/products/<int:product_id>', methods=['PUT'])
-@token_required
+@admin_required
 def update_product(current_user, product_id):
     product = Product.query.get(product_id)
     if product is None:
@@ -83,7 +93,7 @@ def update_product(current_user, product_id):
     return jsonify(product.to_dict())
 
 @product_bp.route('/products/<int:product_id>', methods=['DELETE'])
-@token_required
+@admin_required
 def delete_product(current_user, product_id):
     product = Product.query.get(product_id)
     if product is None:

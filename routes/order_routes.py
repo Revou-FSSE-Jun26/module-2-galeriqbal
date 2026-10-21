@@ -1,12 +1,20 @@
 from flask import Blueprint, jsonify, request
-from models import db, Order, order_items
+from models import db, Order, Product, order_items
 from utils.decorators import token_required
 
 order_bp = Blueprint('orders', __name__)
 
 @order_bp.route('/orders', methods=['GET'])
 def get_orders():
-    orders = Order.query.all()
+    limit = request.args.get('limit', default=50, type=int)
+    query = Order.query
+
+    # Filter opsional: order milik satu user (customer lihat order sendiri)
+    user_id = request.args.get('user_id', type=int)
+    if user_id:
+        query = query.filter(Order.user_id == user_id)
+
+    orders = query.order_by(Order.id.desc()).limit(limit).all()
     return jsonify([order.to_dict() for order in orders])
 
 @order_bp.route('/orders/<int:order_id>', methods=['GET'])
@@ -21,13 +29,15 @@ def get_order(order_id):
     ).fetchall()
 
     result = order.to_dict()
-    result["products"] = [
-        {
+    result["products"] = []
+    for item in items:
+        product = Product.query.get(item.product_id)
+        result["products"].append({
             "product_id": item.product_id,
+            "product_name": product.name if product else None,
             "quantity": item.quantity,
             "product_price": float(item.product_price) if item.product_price else None
-        } for item in items
-    ]
+        })
 
     return jsonify(result)
 

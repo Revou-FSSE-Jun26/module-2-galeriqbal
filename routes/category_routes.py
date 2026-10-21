@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
-from models import db, Category
-from utils.decorators import token_required
+from models import db, Category, Product
+from utils.decorators import admin_required
 
 category_bp = Blueprint('categories', __name__)
 
@@ -17,7 +17,7 @@ def get_category(category_id):
     return jsonify(category.to_dict())
 
 @category_bp.route('/categories', methods=['POST'])
-@token_required
+@admin_required
 def create_category(current_user):
     data = request.get_json()
 
@@ -32,7 +32,7 @@ def create_category(current_user):
     return jsonify(new_category.to_dict()), 201
 
 @category_bp.route('/categories/<int:category_id>', methods=['PUT'])
-@token_required
+@admin_required
 def update_category(current_user, category_id):
     category = Category.query.get(category_id)
     if category is None:
@@ -49,11 +49,16 @@ def update_category(current_user, category_id):
     return jsonify(category.to_dict())
 
 @category_bp.route('/categories/<int:category_id>', methods=['DELETE'])
-@token_required
+@admin_required
 def delete_category(current_user, category_id):
     category = Category.query.get(category_id)
     if category is None:
         return jsonify({"error": "Category not found"}), 404
+
+    # Deletion guard: jangan hapus kategori yang masih punya produk.
+    linked = Product.query.filter_by(categories_id=category_id).first()
+    if linked:
+        return jsonify({"error": "Cannot delete category with linked products"}), 400
 
     db.session.delete(category)
     db.session.commit()

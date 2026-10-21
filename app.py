@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask_migrate import Migrate
+from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 from models import db
@@ -26,6 +27,9 @@ def create_app(config_overrides=None):
     db.init_app(app)
     Migrate(app, db)
 
+    # Izinkan request dari frontend Next.js (beda origin / port)
+    CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000"]}})
+
     # Register Blueprints
     app.register_blueprint(user_bp)
     app.register_blueprint(product_bp)
@@ -45,4 +49,4 @@ app = create_app()
 
 if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_DEBUG', 'False') == 'True'
-    app.run(debug=debug_mode)
+    app.run(debug=debug_mode, threaded=True)

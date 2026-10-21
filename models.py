@@ -181,6 +181,7 @@ class Order(db.Model):
         return {
             "id": self.id,
             "user_id": self.user_id,
+            "user_name": self.user.name if self.user else None,
             "total_prices": float(self.total_prices) if self.total_prices else None,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
